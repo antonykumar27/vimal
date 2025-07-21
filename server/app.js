@@ -19,7 +19,7 @@ const corsOptions = {
     "http://localhost:5174",
     "http://localhost:8000",
     "http://localhost:3000",
-    "https://vimalecommerce.onrender.com",
+    "https://vimal-rbcc.onrender.com",
     process.env.FRONTEND_URL,
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],

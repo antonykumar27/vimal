@@ -25,6 +25,7 @@ function Register() {
     name: "",
     email: "",
     password: "",
+    secretKey: "",
   });
 
   const [createRegister, { isLoading: isRegistering }] =
@@ -83,7 +84,11 @@ function Register() {
           toast.success("Login successful!");
 
           // Navigate to home
-          navigate("/ecomerceloginHome");
+          if (response.user.role === "admin") {
+            navigate("/ecomerceloginHome");
+          } else {
+            navigate("/home");
+          }
         } else {
           toast.error("Login failed. Invalid credentials.");
         }
@@ -200,6 +205,21 @@ function Register() {
                     )}
                   </button>
                 </div>
+                {!isLoginMode && (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FaLock className="text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      name="secretKey"
+                      value={formData.secretKey}
+                      onChange={handleChange}
+                      className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      placeholder="Admin secret key (optional)"
+                    />
+                  </div>
+                )}
 
                 {isLoginMode && (
                   <div className="flex justify-end">
