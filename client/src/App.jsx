@@ -15,6 +15,7 @@ import AdminProductUpdate from "./ecommerce/AdminProductUpdate";
 import AdminOutlet from "./ecommerce/AdminOutlet";
 import AuthLatout from "./ecommerce/AuthLayout";
 import Homes from "./ecommerce/Home";
+import UserProductDisplay from "./ecommerce/UserProductDisplay";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Register />} />
         <Route path="home" element={<Homes />} />
+        <Route path="product/:id" element={<UserProductDisplay />} />
         <Route
           path="/ecomerceloginHome"
           element={
@@ -33,7 +35,7 @@ function App() {
           <Route element={<AdminOutlet />}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<ProductDisplay />} />
-            <Route path="home" element={<Homes />} />
+
             <Route path="productCreate" element={<ProductCreateModal />} />
 
             <Route path="product/:id" element={<SingleProductUpdate />} />

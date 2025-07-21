@@ -76,7 +76,7 @@ function Home() {
 
   const handleRedirect = (product) => {
     if (product.totalStock !== 0) {
-      navigate(`/ecomerceloginHome/product/${product._id}`);
+      navigate(`/product/${product._id}`);
     }
   };
 
@@ -103,7 +103,7 @@ function Home() {
 
   // Handle quick view
   const handleQuickView = (id) => {
-    navigate(`/ecomerceloginHome/product/${id}`);
+    navigate(`/product/${id}`);
   };
 
   // Handle add to cart
