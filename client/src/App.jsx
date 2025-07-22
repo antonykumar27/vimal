@@ -24,7 +24,7 @@ import { useGetsendStripeApiQuery } from "../store/api/ProductAdminApi";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import OrderSuccess from "./ecommerce/OrderSuccess";
-import CashOnDeliveryOrderSuccess from "./ecommerce/cashOnDeliveryOrderSuccess";
+import CashOnDeliveryOrderSuccess from "./ecommerce/CashOnDeliveryOrderSuccess";
 import MyOrderStatus from "./ecommerce/MyOrderStatus";
 function App() {
   const { data, error, isLoading } = useGetsendStripeApiQuery();
