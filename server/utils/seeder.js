@@ -29,8 +29,6 @@ const seedUsers = async () => {
     await User.deleteMany(); // delete existing users
 
     await User.insertMany(users); // insert seed users
-
-    console.log("User data seeded successfully.");
   } catch (error) {
     console.error("Error while seeding users:", error);
   }

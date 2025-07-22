@@ -113,7 +113,7 @@ function Home() {
         Added <span className="font-bold">{product.title}</span> to cart!
         <button
           className="ml-2 text-blue-600 underline"
-          onClick={() => navigate("/cart")}
+          onClick={() => navigate("/cart//////")}
         >
           View Cart
         </button>

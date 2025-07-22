@@ -6,6 +6,14 @@ const {
   getProductById,
   updateProductAdmin,
   updateProductReview,
+  addToCart,
+  getCart,
+  deleteCartItem,
+  updateCartItem,
+  createOrder,
+  processPayment,
+  sendStripeApi,
+  getMyOrders,
 } = require("../controller/productAdminController");
 
 const { isAuthenticatedUser } = require("../middlewares/authenticate");
@@ -43,5 +51,29 @@ router.post(
   isAuthenticatedUser,
   multerMiddleware,
   updateProductReview
+);
+router.post("/cart", isAuthenticatedUser, multerMiddleware, addToCart);
+router.delete(
+  "/products/remove/:id",
+  isAuthenticatedUser,
+  multerMiddleware,
+  deleteCartItem
+);
+
+router.get("/cart", isAuthenticatedUser, multerMiddleware, getCart);
+router.put(
+  "/cart/update/:id",
+  isAuthenticatedUser,
+  multerMiddleware,
+  updateCartItem
+);
+router.route("/payment/process").post(isAuthenticatedUser, processPayment);
+router.route("/stripeapi").get(isAuthenticatedUser, sendStripeApi);
+router.post("/orders", isAuthenticatedUser, multerMiddleware, createOrder);
+router.get(
+  "/productsorder",
+  isAuthenticatedUser,
+  multerMiddleware,
+  getMyOrders
 );
 module.exports = router;

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   useGetProductByIdQuery,
   useDeleteProductMutation,
+  useCreateCartMutation,
 } from "../../store/api/ProductAdminApi";
 import { toast } from "react-toastify";
 import {
@@ -28,9 +29,11 @@ import UserHeader from "./UserHeader";
 function UserProductDisplay() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const { data, isLoading, isError, refetch } = useGetProductByIdQuery(id);
   const [deleteProduct] = useDeleteProductMutation();
-
+  const [addToCart, { isLoading: isCartLoading, isSuccess, error }] =
+    useCreateCartMutation();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -48,11 +51,7 @@ function UserProductDisplay() {
       setShowDeleteConfirmation(false);
     }
   };
-
-  const handleAddToCart = () => {
-    toast.success(`${quantity} ${product.title} added to cart!`);
-    // In a real app, you would dispatch to cart store here
-  };
+  // const [socketdata,setSocketData]=useState([]);
 
   const incrementQuantity = () => {
     if (quantity < product.totalStock) {
@@ -63,6 +62,22 @@ function UserProductDisplay() {
   const decrementQuantity = () => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
+    }
+  };
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+
+    const cartItem = {
+      productId: product._id,
+      quantity: quantity,
+    };
+
+    try {
+      await addToCart(cartItem); // call your API or Redux action
+      toast.success(`${quantity} ${product.title} added to cart!`);
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      toast.error("Failed to add item to cart.");
     }
   };
 

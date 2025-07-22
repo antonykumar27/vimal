@@ -20,12 +20,25 @@ export const productAdminApi = createApi({
     getProducts: builder.query({
       query: () => "/products",
     }),
-
+    getProductsOrders: builder.query({
+      query: () => "/products",
+    }),
+    getProductOrder: builder.query({
+      query: () => `/productsorder`,
+    }),
+    getCart: builder.query({
+      query: () => "/cart",
+    }),
+    getsendStripeApi: builder.query({
+      query: () => "/stripeapi",
+    }),
     // ✅ GET single product by ID
     getProductById: builder.query({
       query: (id) => `/products/${id}`,
     }),
-
+    getProductOrderById: builder.query({
+      query: (id) => `/products/order/${id}`,
+    }),
     // ✅ CREATE new product
     createProduct: builder.mutation({
       query: (newProduct) => ({
@@ -41,12 +54,41 @@ export const productAdminApi = createApi({
         body: newProduct,
       }),
     }),
+    createProductOrder: builder.mutation({
+      query: (newProduct) => ({
+        url: "/orders",
+        method: "POST",
+        body: newProduct,
+      }),
+    }),
+    createProcessPayment: builder.mutation({
+      query: (paymentData) => ({
+        url: "/payment/process",
+        method: "POST",
+        body: paymentData,
+      }),
+    }),
+    createCart: builder.mutation({
+      query: (newProduct) => ({
+        url: "/cart",
+        method: "POST",
+        body: newProduct,
+      }),
+    }),
+
     // ✅ UPDATE product
     updateProduct: builder.mutation({
       query: ({ id, formData }) => ({
         url: `/products/${id}`,
         method: "PUT",
         body: formData,
+      }),
+    }),
+    updateCartItem: builder.mutation({
+      query: ({ itemId, quantity }) => ({
+        url: `/cart/update/${itemId}`,
+        method: "PUT",
+        body: { quantity },
       }),
     }),
 
@@ -57,14 +99,29 @@ export const productAdminApi = createApi({
         method: "DELETE",
       }),
     }),
+    removeCartItem: builder.mutation({
+      query: (id) => ({
+        url: `/products/remove/${id}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
 export const {
+  useUpdateCartItemMutation,
+  useRemoveCartItemMutation,
   useGetProductsQuery,
+  useGetCartQuery,
   useGetProductByIdQuery,
+  useGetProductOrderQuery,
+  useGetProductOrderByIdQuery,
+  useGetsendStripeApiQuery,
   useCreateProductMutation,
+  useCreateProcessPaymentMutation,
+  useCreateCartMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
   useCreateProductReviewsMutation,
+  useCreateProductOrderMutation,
 } = productAdminApi;

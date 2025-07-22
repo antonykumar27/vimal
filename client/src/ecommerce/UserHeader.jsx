@@ -12,13 +12,20 @@ import { FiBell } from "react-icons/fi";
 import { useAuth } from "../middlewares/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./UserSideBar";
+import { useSocket } from "../middlewares/Socket";
+import { useGetCartQuery } from "../../store/api/ProductAdminApi";
 
 function UserHeader() {
   const [openSidebar, setOpenSidebar] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const profileRef = useRef(null);
+  const { socket } = useSocket();
+  console.log("cartCount", cartCount);
+  // Get cart data from RTK Query
+  const { data: cartData, refetch: refetchCart } = useGetCartQuery();
 
   const handleLogout = (e) => {
     e.preventDefault();
@@ -26,9 +33,42 @@ function UserHeader() {
     navigate("/");
   };
 
-  const onCreateProduct = () => {
-    navigate("/ecomerceloginHome/productCreate");
+  // Calculate total cart items count
+  const calculateCartCount = (cart) => {
+    if (!cart?.items) return 0;
+    return cart.items.reduce((total, item) => total + item.quantity, 0);
   };
+
+  // Initialize cart count from RTK Query
+  useEffect(() => {
+    if (cartData?.cart) {
+      setCartCount(calculateCartCount(cartData.cart));
+    }
+  }, [cartData]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleCartChange = (data) => {
+      console.log("🛒 Cart changed (add/update/delete):", data);
+
+      if (data.cart) {
+        setCartCount(calculateCartCount(data.cart));
+      }
+
+      // Optionally, always refetch the latest cart from server
+      refetchCart();
+    };
+
+    // Unified handler for any cart mutation
+    socket.on("cartUpdated", handleCartChange);
+    socket.on("cartdeleted", handleCartChange);
+
+    return () => {
+      socket.off("cartUpdated", handleCartChange);
+      socket.off("cartdeleted", handleCartChange);
+    };
+  }, [socket, refetchCart]);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -45,7 +85,7 @@ function UserHeader() {
     <>
       <Sidebar open={openSidebar} onClose={() => setOpenSidebar(false)} />
 
-      <header className="bg-gradient-to-r from-rose-900 to-rose-700 text-white shadow-lg sticky top-0 z-40 mb-10">
+      <header className="bg-gradient-to-r from-violet-900 to-rose-700 text-white shadow-lg sticky top-0 z-40 mb-10">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center">
             <button
@@ -55,9 +95,39 @@ function UserHeader() {
               <AlignJustify className="text-white" />
               <span className="sr-only">Toggle Menu</span>
             </button>
-            <h1 className="hidden md:block text-xl font-bold ml-4">
-              Admin Dashboard
-            </h1>
+
+            {/* Cart Button with Count Badge */}
+            <div className="relative ml-4 flex items-center">
+              <button
+                onClick={() => navigate("/getcartlist")}
+                className="p-2 rounded-full hover:bg-white/20 transition-all relative"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13l-1.5-7M7 13h10m-6 6a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z"
+                  />
+                </svg>
+
+                {/* Cart Count Badge */}
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full transform translate-x-1/2 -translate-y-1/2 animate-pulse">
+                    {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+                )}
+              </button>
+              <button onClick={() => navigate("/myorderstatus")}>
+                My Order Status
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
