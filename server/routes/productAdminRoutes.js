@@ -14,6 +14,8 @@ const {
   processPayment,
   sendStripeApi,
   getMyOrders,
+  getDashboardStats,
+  getAllOrdersForAdmin,
 } = require("../controller/productAdminController");
 
 const { isAuthenticatedUser } = require("../middlewares/authenticate");
@@ -75,5 +77,17 @@ router.get(
   isAuthenticatedUser,
   multerMiddleware,
   getMyOrders
+);
+router.get(
+  "/adminfullDetailss",
+  isAuthenticatedUser,
+  multerMiddleware,
+  getDashboardStats
+);
+router.get(
+  "/productsallorder",
+  isAuthenticatedUser,
+  multerMiddleware,
+  getAllOrdersForAdmin
 );
 module.exports = router;

@@ -9,7 +9,7 @@ const { io, getReceiverSocketId } = require("../server.js");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const stripe = require("stripe")(process.env.SECRET_STRIPE_KEY);
 const path = require("path");
-
+const User = require("../models/userModel.js");
 dotenv.config({ path: path.join(__dirname, "config/config.env") });
 exports.createProductAdmin = async (req, res) => {
   try {
@@ -421,6 +421,100 @@ exports.sendStripeApi = catchAsyncError(async (req, res, next) => {
 //   });
 // };
 
+// exports.createOrder = catchAsyncError(async (req, res, next) => {
+//   const {
+//     orderItems,
+//     shippingInfo,
+//     itemsPrice,
+//     taxPrice,
+//     shippingPrice,
+//     totalPrice,
+//     paymentMode,
+//     paymentInfo,
+//   } = req.body;
+
+//   const user = req.user._id;
+
+//   // Validate orderItems before proceeding
+//   for (const item of orderItems) {
+//     const { productId, quantity } = item;
+//     const product = await Product.findById(productId);
+
+//     if (!product) {
+//       return res.status(404).json({
+//         success: false,
+//         message: `Product not found: ${productId}`,
+//       });
+//     }
+
+//     if (product.totalStock < quantity) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Insufficient stock for ${product.title}. Available: ${product.totalStock}, Requested: ${quantity}`,
+//       });
+//     }
+//   }
+
+//   // ✅ Create the Order
+//   const order = await Order.create({
+//     orderItems,
+//     shippingInfo,
+//     itemsPrice,
+//     taxPrice,
+//     shippingPrice,
+//     totalPrice,
+//     paymentMode,
+//     paymentInfo,
+//     user,
+//     paidAt: paymentMode === "Online" ? Date.now() : null,
+//   });
+
+//   // ✅ Decrease Product Stock
+//   for (const item of orderItems) {
+//     const { productId, quantity } = item;
+
+//     await Product.findByIdAndUpdate(
+//       productId,
+//       { $inc: { totalStock: -quantity } },
+//       { new: true }
+//     );
+//   }
+
+//   // ✅ Clean up user's cart
+//   const cart = await Cart.findOne({ user });
+
+//   if (cart) {
+//     const remainingItems = cart.items.filter((cartItem) => {
+//       return !orderItems.some((orderItem) => {
+//         const orderedId =
+//           orderItem.productId?.toString() || orderItem.product?.toString();
+//         return cartItem.productId?.toString() === orderedId;
+//       });
+//     });
+
+//     cart.items = remainingItems;
+//     await cart.save();
+//   }
+
+//   res.status(201).json({
+//     success: true,
+//     message: "Order placed successfully!",
+//     order,
+//   });
+// });
+exports.getMyOrders = catchAsyncError(async (req, res, next) => {
+  const userId = req.user._id;
+
+  const orders = await Order.find({ user: userId })
+    .populate("orderItems.productId", "title price media")
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    orders,
+  });
+});
+
 exports.createOrder = catchAsyncError(async (req, res, next) => {
   const {
     orderItems,
@@ -435,7 +529,7 @@ exports.createOrder = catchAsyncError(async (req, res, next) => {
 
   const user = req.user._id;
 
-  // Validate orderItems before proceeding
+  // ✅ Validate each product and check stock
   for (const item of orderItems) {
     const { productId, quantity } = item;
     const product = await Product.findById(productId);
@@ -450,12 +544,12 @@ exports.createOrder = catchAsyncError(async (req, res, next) => {
     if (product.totalStock < quantity) {
       return res.status(400).json({
         success: false,
-        message: `Insufficient stock for ${product.title}. Available: ${product.totalStock}, Requested: ${quantity}`,
+        message: `Insufficient stock for ${product.name}. Available: ${product.totalStock}, Requested: ${quantity}`,
       });
     }
   }
 
-  // ✅ Create the Order
+  // ✅ Create the order
   const order = await Order.create({
     orderItems,
     shippingInfo,
@@ -469,18 +563,23 @@ exports.createOrder = catchAsyncError(async (req, res, next) => {
     paidAt: paymentMode === "Online" ? Date.now() : null,
   });
 
-  // ✅ Decrease Product Stock
+  // ✅ Update product stock and sold count
   for (const item of orderItems) {
     const { productId, quantity } = item;
 
     await Product.findByIdAndUpdate(
       productId,
-      { $inc: { totalStock: -quantity } },
+      {
+        $inc: {
+          totalStock: -quantity, // reduce stock
+          sold: quantity, // increase sold count
+        },
+      },
       { new: true }
     );
   }
 
-  // ✅ Clean up user's cart
+  // ✅ Remove ordered items from the cart
   const cart = await Cart.findOne({ user });
 
   if (cart) {
@@ -496,21 +595,79 @@ exports.createOrder = catchAsyncError(async (req, res, next) => {
     await cart.save();
   }
 
+  // ✅ Send response
   res.status(201).json({
     success: true,
     message: "Order placed successfully!",
     order,
   });
 });
-exports.getMyOrders = catchAsyncError(async (req, res, next) => {
-  const userId = req.user._id;
 
-  const orders = await Order.find({ user: userId })
-    .populate("orderItems.productId", "title price media")
-    .sort({ createdAt: -1 });
+exports.getDashboardStats = catchAsyncError(async (req, res) => {
+  // Total number of products
+  const totalProducts = await Product.countDocuments();
+
+  // Total sold quantity (sum of `sold` field from all products)
+  const soldAggregate = await Product.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalSold: { $sum: "$sold" },
+      },
+    },
+  ]);
+  const totalSold = soldAggregate[0]?.totalSold || 0;
+
+  // Total number of orders
+  const totalOrders = await Order.countDocuments();
+
+  // Total revenue (sum of `totalPrice` from all orders)
+  const revenueAggregate = await Order.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalAmount: { $sum: "$totalPrice" },
+      },
+    },
+  ]);
+  const totalRevenue = revenueAggregate[0]?.totalAmount || 0;
+
+  // Total customers (registered users with role: 'customer')
+  const totalCustomers = await User.countDocuments({ role: "customer" });
 
   res.status(200).json({
     success: true,
-    orders,
+    stats: {
+      totalProducts,
+      totalSold,
+      totalOrders,
+      totalRevenue,
+      totalCustomers,
+    },
   });
 });
+// controllers/orderController.js
+
+exports.getAllOrdersForAdmin = async (req, res) => {
+  try {
+    const orders = await Order.find({})
+      .populate("user", "name email") // Optional: populate customer info
+      .sort({ createdAt: -1 }); // latest orders first
+
+    const totalOrders = orders.length;
+    const totalAmount = orders.reduce(
+      (sum, order) => sum + order.totalPrice,
+      0
+    );
+
+    res.status(200).json({
+      success: true,
+      orders,
+      totalOrders,
+      totalAmount,
+    });
+  } catch (error) {
+    console.error("Admin getAllOrders error:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

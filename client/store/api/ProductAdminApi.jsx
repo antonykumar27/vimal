@@ -29,6 +29,9 @@ export const productAdminApi = createApi({
     getCart: builder.query({
       query: () => "/cart",
     }),
+    getAdminBaseDetails: builder.query({
+      query: () => "/adminfullDetailss",
+    }),
     getsendStripeApi: builder.query({
       query: () => "/stripeapi",
     }),
@@ -38,6 +41,9 @@ export const productAdminApi = createApi({
     }),
     getProductOrderById: builder.query({
       query: (id) => `/products/order/${id}`,
+    }),
+    getProductAllOrder: builder.query({
+      query: () => "/productsallorder",
     }),
     // ✅ CREATE new product
     createProduct: builder.mutation({
@@ -112,8 +118,11 @@ export const {
   useUpdateCartItemMutation,
   useRemoveCartItemMutation,
   useGetProductsQuery,
+
+  useGetProductAllOrderQuery,
   useGetCartQuery,
   useGetProductByIdQuery,
+  useGetAdminBaseDetailsQuery,
   useGetProductOrderQuery,
   useGetProductOrderByIdQuery,
   useGetsendStripeApiQuery,

@@ -26,6 +26,13 @@ import { loadStripe } from "@stripe/stripe-js";
 import OrderSuccess from "./ecommerce/OrderSuccess";
 import CashOnDeliveryOrderSuccess from "./ecommerce/CashOnDeliveryOrderSuccess";
 import MyOrderStatus from "./ecommerce/MyOrderStatus";
+import AllOrders from "./ecommerce/AllOrders";
+import AllCustomers from "./ecommerce/AllCustomers";
+import AllReviews from "./ecommerce/AllReviews";
+import AllMessage from "./ecommerce/AllMessage";
+import Analytics from "./ecommerce/Analytics";
+import Discounts from "./ecommerce/Discounts";
+import { Settings } from "lucide-react";
 function App() {
   const { data, error, isLoading } = useGetsendStripeApiQuery();
   console.log("data", data);
@@ -80,7 +87,13 @@ function App() {
             <Route element={<AdminOutlet />}>
               <Route index element={<AdminDashboard />} />
               <Route path="products" element={<ProductDisplay />} />
-
+              <Route path="orders" element={<AllOrders />} />
+              <Route path="customers" element={<AllCustomers />} />
+              <Route path="reviews" element={<AllReviews />} />
+              <Route path="messages" element={<AllMessage />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="discounts" element={<Discounts />} />
+              <Route path="settings" element={<Settings />} />
               <Route path="productCreate" element={<ProductCreateModal />} />
 
               <Route path="product/:id" element={<SingleProductUpdate />} />
